@@ -122,17 +122,22 @@ export const ModelSelectionButton: React.FC<{}> = ({ }) => {
         </TableCell>
         <TableCell align="left">
             <FormControl sx={{width: 100 }} size="small">
-                <Select
-                    title='key type'
-                    value={newKeyType}
-                    input={<OutlinedInput sx={{fontSize: '0.875rem'}}/>}
-                    onChange={(event: SelectChangeEvent) => {
-                        setNewKeyType(event.target.value);
-                    }}
-                >
-                    <MenuItem sx={{fontSize: '0.875rem' }} value="openai">openai</MenuItem>
-                    <MenuItem sx={{fontSize: '0.875rem' }} value="azureopenai">azure openai</MenuItem>
-                </Select>
+            <Select
+                title='key type'
+                value={newKeyType}
+                input={<OutlinedInput sx={{fontSize: '0.875rem'}}/>}
+                onChange={(event: SelectChangeEvent) => {
+                    setNewKeyType(event.target.value);
+                    // Optionally set a default endpoint when openrouter is selected
+                    if (event.target.value === 'openrouter') {
+                    setNewEndpoint("https://openrouter.ai/api/v1"); // default URL
+                    }
+                 }}
+            >
+                <MenuItem sx={{fontSize: '0.875rem'}} value="openai">openai</MenuItem>
+                <MenuItem sx={{fontSize: '0.875rem'}} value="azureopenai">azure openai</MenuItem>
+                <MenuItem sx={{fontSize: '0.875rem'}} value="openrouter">openrouter</MenuItem>
+            </Select>
             </FormControl>
         </TableCell>
         <TableCell component="th" scope="row">
@@ -181,7 +186,16 @@ export const ModelSelectionButton: React.FC<{}> = ({ }) => {
                         if (modelExists) {
                             return
                         }
-                        let endpoint = newKeyType == 'openai' ? 'openai' : newEndpoint;
+                        let endpoint;
+                        if (newKeyType === 'openai') {
+                            endpoint = 'openai';
+                        } else if (newKeyType === 'openrouter') {
+                        // Use a fixed string or the value from newEndpoint if you want to allow custom endpoints.
+                            endpoint = newEndpoint || 'openrouter';
+                        } else {
+                         // For azure openai, let the user provide the endpoint.
+                         endpoint = newEndpoint;
+                        }
                         event.stopPropagation()
 
                         dispatch(dfActions.addModel({model: newModel, key: newKey, endpoint}));
@@ -254,7 +268,13 @@ export const ModelSelectionButton: React.FC<{}> = ({ }) => {
                                 <Radio checked={isItemSelected} name="radio-buttons" inputProps={{'aria-label': 'Select this model'}} />
                             </TableCell>
                             <TableCell align="left" sx={{ borderBottom: noBorderStyle }}>
-                                {oaiModel.endpoint == 'openai' ? 'openai' : 'azure openai'}
+                                {
+                                    oaiModel.endpoint === 'openai'
+                                        ? 'openai'
+                                        : oaiModel.endpoint === 'openrouter'
+                                        ? 'openrouter'
+                                        : 'azure openai'
+                                }
                             </TableCell>
                             <TableCell component="th" scope="row" sx={{ borderBottom: borderStyle }}>
                                 {oaiModel.endpoint}
